@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -16,7 +17,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.lang.reflect.Method;
+
 public class MainActivity extends AppCompatActivity {
+
+    private static String TAG = "MainActivity";
 
     /*  Permission request code to draw over other apps  */
     private static final int DRAW_OVER_OTHER_APP_PERMISSION_REQUEST_CODE = 1222;
@@ -41,14 +46,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        getDrawOverOtherApp();
-
     }
 
     public void getDrawOverOtherApp() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !canDrawOverlaysAfterUserWasAskedToEnableIt(this)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !canDrawOverlays(this)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
             startActivityForResult(intent, DRAW_OVER_OTHER_APP_PERMISSION_REQUEST_CODE);
+
         }else{
             tvMsg.setText(getResources().getString(R.string.text_permission_ok));
         }
@@ -56,66 +60,47 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        String strResp = null;
         if (requestCode == DRAW_OVER_OTHER_APP_PERMISSION_REQUEST_CODE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                String strResp = null;
-                if (canDrawOverlaysAfterUserWasAskedToEnableIt(this)) {
-                    Toast.makeText(this, getResources().getString(R.string.text_permission_ok), Toast.LENGTH_LONG).show();
-                    strResp = getResources().getString(R.string.text_permission_ok);
-                    btnOpen.setVisibility(View.GONE);
-                } else {
-                    Toast.makeText(this, getResources().getString(R.string.text_permission_nok), Toast.LENGTH_LONG).show();
-                    strResp = getResources().getString(R.string.text_permission_nok);
-                    btnOpen.setVisibility(View.VISIBLE);
-                }
-                tvMsg.setText(strResp);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !canDrawOverlays(this)) {
+                Toast.makeText(this, getResources().getString(R.string.text_permission_nok), Toast.LENGTH_LONG).show();
+                strResp = getResources().getString(R.string.text_permission_nok);
+                btnOpen.setVisibility(View.VISIBLE);
+
+            } else {
+                Toast.makeText(this, getResources().getString(R.string.text_permission_ok), Toast.LENGTH_LONG).show();
+                strResp = getResources().getString(R.string.text_permission_ok);
+                btnOpen.setVisibility(View.GONE);
             }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
+            tvMsg.setText(strResp);
+        } else { super.onActivityResult(requestCode, resultCode, data); }
     }
 
-    public static boolean canDrawOverlaysAfterUserWasAskedToEnableIt(Context context) {
-        if(context == null )
-            return false;
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
+    public static boolean canDrawOverlays(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
+        else if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            return Settings.canDrawOverlays(context);
         } else {
-            if (Settings.canDrawOverlays(context)) {
-                return true;
-            }
+            if (Settings.canDrawOverlays(context)) return true;
+            Log.e(TAG,"Android Oreo");
             try {
-                final WindowManager mgr = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+                WindowManager mgr = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
                 if (mgr == null) {
-                    return false;
+                    return false; //getSystemService might return null
                 }
-                final View viewToAdd = new View(context);
-
-
+                View viewToAdd = new View(context);
                 WindowManager.LayoutParams params = new WindowManager.LayoutParams(0, 0, android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O ?
                         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                         WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSPARENT);
                 viewToAdd.setLayoutParams(params);
-
-
                 mgr.addView(viewToAdd, params);
-
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (viewToAdd != null && mgr != null) {
-                            mgr.removeView(viewToAdd);
-                        }
-                    }
-                }, 500);
-
+                mgr.removeView(viewToAdd);
                 return true;
-
             } catch (Exception e) {
-                return false;
+                e.printStackTrace();
             }
+            return false;
         }
     }
 
