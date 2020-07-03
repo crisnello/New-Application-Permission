@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -19,13 +18,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.lang.reflect.Method;
-
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
 
-    /*  Permission request code to draw over other apps  */
     private static final int DRAW_OVER_OTHER_APP_PERMISSION_REQUEST_CODE = 1222;
 
     private TextView tvMsg;
@@ -70,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
                 strResp = getResources().getString(R.string.text_permission_nok);
                 btnOpen.setVisibility(View.VISIBLE);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    btnOpen.setText("Clique aqui para verificar se a permissão está OK");
+                    btnOpen.setText(getResources().getString(R.string.text_btn));
 
             } else {
                 Toast.makeText(this, getResources().getString(R.string.text_permission_ok), Toast.LENGTH_LONG).show();
@@ -89,23 +85,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             if (Settings.canDrawOverlays(context)) return true;
             Log.e(TAG,"Android Oreo");
-            try {
-                WindowManager mgr = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-                if (mgr == null) {
-                    return false; //getSystemService might return null
-                }
-                View viewToAdd = new View(context);
-                WindowManager.LayoutParams params = new WindowManager.LayoutParams(0, 0, android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O ?
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSPARENT);
-                viewToAdd.setLayoutParams(params);
-                mgr.addView(viewToAdd, params);
-                mgr.removeView(viewToAdd);
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return false;
+
+            return validateOreo(context);
         }
     }
 
