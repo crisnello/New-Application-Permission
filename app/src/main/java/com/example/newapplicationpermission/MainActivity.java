@@ -54,7 +54,16 @@ public class MainActivity extends AppCompatActivity {
         }else{
             tvMsg.setText(getResources().getString(R.string.text_permission_ok));
             btnOpen.setVisibility(View.GONE);
+
+            openDialog();
+
         }
+    }
+
+    public void openDialog(){
+        Intent intent = new Intent(this, FloatingActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     @Override
@@ -74,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 btnOpen.setVisibility(View.GONE);
             }
             tvMsg.setText(strResp);
+            openDialog();
         } else { super.onActivityResult(requestCode, resultCode, data); }
     }
 

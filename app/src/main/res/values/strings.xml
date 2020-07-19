@@ -1,11 +1,10 @@
 <resources>
-    <string name="app_name">New Application Permission</string>
+    <string name="app_name">New Application</string>
 
     <string name="text_permission_nok">Essa permissão é necessária para utilizar a sobreposição de apps</string>
     <string name="text_permission_ok">Obrigado pela permissão</string>
 
-    <string name="text_btn">"Clique aqui para verificar se a permissão está OK"</string>
-
+    <string name="text_btn">Clique aqui para verificar se a permissão está OK</string>
 
 
 </resources>
