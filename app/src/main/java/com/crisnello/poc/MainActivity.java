@@ -16,9 +16,20 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.logging.Logger;
+
 public class MainActivity extends AppCompatActivity {
+
+    private FirebaseAuth mAuth;
 
     private static String TAG = "MainActivity";
 
@@ -26,13 +37,15 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvMsg;
 
-    private Button btnOpen;
+    private Button btnOpen,  btnLogin;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAuth = FirebaseAuth.getInstance();
 
         tvMsg = findViewById(R.id.tvMsg);
 
@@ -44,7 +57,54 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btnLogin = findViewById(R.id.btnLogin);
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signIn();
+            }
+        });
     }
+
+    private void signIn() {
+        mAuth.signInWithEmailAndPassword("usuario@login.com", "123456")
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            LogCurrentUser(user);
+                        } else {
+                            Toast.makeText(MainActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    public void LogCurrentUser(FirebaseUser user){
+        if (user != null) {
+
+            String name = user.getDisplayName();
+            String email = user.getEmail();
+            Uri photoUrl = user.getPhotoUrl();
+
+            boolean emailVerified = user.isEmailVerified();
+
+            String uid = user.getUid();
+
+            Log.i(TAG,"Name : " + name + " Email : " + email);
+            tvMsg.setText("Hello " + email);
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        LogCurrentUser(currentUser);
+    }
+
 
     public void getDrawOverOtherApp() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !canDrawOverlaysStart(this)) {
