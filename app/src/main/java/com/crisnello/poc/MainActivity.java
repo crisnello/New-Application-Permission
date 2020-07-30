@@ -1,4 +1,4 @@
-package com.example.newapplicationpermission;
+package com.crisnello.poc;
 
 import android.app.AppOpsManager;
 import android.content.Context;

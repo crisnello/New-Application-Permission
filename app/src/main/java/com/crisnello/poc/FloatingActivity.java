@@ -1,11 +1,10 @@
-package com.example.newapplicationpermission;
+package com.crisnello.poc;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 public class FloatingActivity extends AppCompatActivity implements ItemListDialogFragment.Listener {
 
